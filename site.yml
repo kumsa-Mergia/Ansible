@@ -1,0 +1,33 @@
+---
+
+- name: Manage web servers
+  hosts: web_servers
+  become: true
+  tasks:
+    - name: Install updates for CentOS
+      dnf:
+        update_only: yes
+        update_cache: yes
+      when: ansible_distribution == "CentOS"
+
+    - name: Update repository index for Ubuntu
+      apt:
+        update_cache: yes
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install Apache2 and PHP for Ubuntu
+      apt:
+        name:
+          - apache2
+          - php
+        state: latest
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install Apache2 and PHP for CentOS
+      dnf:
+        name:
+          - httpd
+          - php
+        state: latest
+      when: ansible_distribution == "CentOS"
+
