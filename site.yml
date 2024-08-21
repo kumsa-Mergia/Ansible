@@ -15,7 +15,7 @@
         update_cache: yes
       when: ansible_distribution == "Ubuntu"
 
-    - name: Install Apache2 and PHP for Ubuntu
+    - name: Install MariaDB and PHP for Ubuntu
       apt:
         name:
           - mariadb-server
