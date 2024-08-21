@@ -19,9 +19,18 @@
       apt:
         name:
           - mariadb-server
-          - php
+          - apache2
         state: latest
       when: ansible_distribution == "Ubuntu"
+
+    - name: copy default html file for site
+      tags: apache,apache2
+      copy:
+        src: default_site.html
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: 0644
 
     - name: Install Apache2 and PHP for CentOS
       dnf:
