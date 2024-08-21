@@ -40,3 +40,23 @@
         state: latest
       when: ansible_distribution == "CentOS"
 
+
+    - name: Install unzip
+      package:
+        name: unzip
+        state: present
+
+    - name: Download Terraform ZIP file
+      get_url:
+        url: https://releases.hashicorp.com/terraform/0.12.28/terraform_0.12.28_linux_amd64.zip
+        dest: /tmp/terraform_0.12.28_linux_amd64.zip
+
+    - name: Unarchive Terraform ZIP file
+      unarchive:
+        src: /tmp/terraform_0.12.28_linux_amd64.zip
+        dest: /usr/local/bin
+        remote_src: yes
+        mode: '0755'
+        owner: root
+        group: root
+
