@@ -1,0 +1,22 @@
+# Before Runing the Playbook you havve to
+
+Ensure the sudoers file on the target hosts is correctly configured to allow the Ansible user to execute commands with sudo without a password (if that is your requirement). You can modify the sudoers file with:
+
+    # Use visudo to edit
+
+sudo visudo
+
+Add a line like:
+
+	#ansible_user ALL=(ALL) NOPASSWD:ALL
+Replace ansible_user with the username that Ansible uses to connect
+
+	#To see all tags in the playbook
+ansible-playbook usermgmnt.yaml --list-tags
+
+	# Run The playbook To Add New Group In That Server
+ansible-playbook -i inventory usermgmnt.yaml --tags add_new_group
+	
+	# Run The playbook To Add New Group In That Server
+ansible-playbook -i inventory usermgmnt.yaml --tags add_new_user
+
