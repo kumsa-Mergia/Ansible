@@ -1,0 +1,78 @@
+---
+## This Playbook on user management using Ansible
+## Playbook uses "user, group, and authorized_keys" modules
+## Use this playbook at your own risk
+
+- hosts: all
+  become: yes  # Ensure privilege escalation is properly applied
+  become_user: root
+  tasks:
+
+    # This Task Creates Groups
+    - name: Add Groups
+      group:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - demogrp
+        - demogrp1
+        - demogrp2
+      ignore_errors: yes
+      tags: add_new_group
+
+    # This task create user 
+    - name: Check if users exist
+      user:
+        name: "{{ item }}"
+        state: present
+        groups: demogrp
+        password: "{{ 'password' | password_hash('sha512') }}"  # Ensure password is hashed
+      loop:
+        - demouser1
+        - demouser2
+        - demouser3
+        - demouser4
+      ignore_errors: yes
+      tags: add_new_user
+
+    # This Task Generates SSH Keys for Users
+    - name: Generate SSH keys for users
+      user:
+        name: "{{ item }}"
+        generate_ssh_key: yes
+        ssh_key_bits: 4096
+        ssh_key_files: .ssh/id_rsa
+      loop:
+        - demouser1
+      tags: generate_ssh_keys
+
+    # This Task Copies the Public Keys to User Accounts
+    - name: Update Authorized key for a user
+      authorized_key:
+        user: demouser1
+        state: present
+        key: "{{ lookup('file', '/home/demouser1/.ssh/id_rsa.pub') }}"  # Ensure the public key is read from the correct path
+      tags: copy_pub_key
+
+    # This Task Deletes Several Users
+    - name: Delete Several Users
+      user:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - demouser3
+        - demouser4
+      ignore_errors: yes
+      tags: remove_user
+
+    # This Task Deletes Several Groups
+    - name: Delete Several Groups
+      group:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - demogrp
+        - demogrp1
+        - demogrp2
+      ignore_errors: yes
+      tags: remove_group
