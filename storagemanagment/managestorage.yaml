@@ -1,0 +1,60 @@
+---
+- name: Example
+  hosts: all
+  become: yes
+  vars_files:
+    - group_vars/fileserver.yaml
+  tasks:
+    - name: Ensure xfsprogs is installed
+      package:
+        name: xfsprogs
+        state: present
+
+    - name: Create Partition
+      parted:
+        device: "{{ disk }}"
+        number: 1
+        flags:
+          - lvm
+        state: present
+        part_end: 1GiB
+
+    - name: Create VG
+      lvg:
+        vg: "{{ vg_name }}"
+        pvs: "{{ disk }}1"
+
+    - name: Create LV
+      lvol:
+        vg: "{{ vg_name }}"
+        lv: "{{ lv_name }}"
+        size: 512m
+
+    - name: Create mount point
+      file:
+        path: "{{ mount_point }}"
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Format the LV Partition
+      filesystem:
+        fstype: xfs
+        dev: "/dev/{{ vg_name }}/{{ lv_name }}"
+
+    - name: Mount the LV
+      mount:
+        path: "{{ mount_point }}"
+        src: "/dev/{{ vg_name }}/{{ lv_name }}"
+        fstype: xfs
+        state: mounted
+
+    - name: Gather facts
+      setup:
+
+    - name: List Partition
+      debug:
+        msg: "Partition name is {{ item.key }} size = {{ item.value.size }}"
+      loop: "{{ ansible_devices['sdb'].partitions | dict2items }}"
+      when: item.key == "sdb1"
