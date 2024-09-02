@@ -1,0 +1,4 @@
+disk: /dev/sdb
+vg_name: vgtest
+lv_name: mylv
+mount_point: /mydata
