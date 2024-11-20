@@ -1,0 +1,9 @@
+---
+- name: Fetch log files from remote servers
+  hosts: all
+  tasks:
+    - name: Fetch /var/log/messages file
+      fetch:
+        src: /var/log/messages
+        dest: /tmp/logs/{{ inventory_hostname }}/messages
+        flat: no

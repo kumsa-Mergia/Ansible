@@ -1,0 +1,12 @@
+---
+- name: Deploy index.html to web servers
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Copy index.html to the document root
+      copy:
+        src: /path/to/local/index.html
+        dest: /var/www/html/index.html
+        owner: apache
+        group: apache
+        mode: '0644'

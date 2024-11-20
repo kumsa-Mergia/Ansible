@@ -1,0 +1,17 @@
+---
+- name: Delete users on multiple operating systems
+  hosts: all
+  become: true
+  vars:
+    users_to_delete:
+      - KumsaMergia
+      - ChristianoRonaldo
+
+  tasks:
+    - name: Delete users and their home directories
+      user:
+        name: "{{ item }}"
+        state: absent
+        remove: yes  # This will remove the user's home directory as well
+      loop: "{{ users_to_delete }}"
+
