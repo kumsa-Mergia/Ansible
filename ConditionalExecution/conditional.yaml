@@ -1,0 +1,10 @@
+---
+- name: Conditional task example
+  hosts: all
+  become: yes
+  tasks:
+    - name: Restart sshd if the configuration was modified
+      service:
+        name: sshd
+        state: restarted
+      when: ansible_facts['os_family'] == 'RedHat'
