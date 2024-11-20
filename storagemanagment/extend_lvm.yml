@@ -1,0 +1,16 @@
+---
+- name: Extend LVM and VG configuration #  A description of the playbook's purpose:
+  hosts: all # Indicates that the playbook will run on all hosts in the inventory.
+  become: true # Executes tasks with elevated privileges (e.g., using sudo).
+  vars:    
+    lvm_vg: "kumsa_VolumeG"  # Name of the volume group (Kumsa_VolumeG) to be extended
+    lvm_lv: "kumsa_LogicalV" # Name of the logical volume (Kumsa_LogicalV) to be extended.
+
+  tasks:
+    - name: Extend Logical Volume
+    # This increases the size of the logical volume (/dev/Kumsa_VolumeG/Kumsa_LogicalV) by 5 GB.
+      command: "lvextend -L +5G /dev/{{ lvm_vg }}/{{ lvm_lv }}" # The +5G syntax ensures that 5 GB is added to the current size of the logical volume
+
+    - name: Resize filesystem
+    # Resizes the filesystem on the logical volume (/dev/Kumsa_VolumeG/Kumsa_LogicalV) to match the new size of the logical volume.
+      command: "resize2fs /dev/{{ lvm_vg }}/{{ lvm_lv }}" # This ensures that the additional space allocated to the logical volume is usable
