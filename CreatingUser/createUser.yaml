@@ -1,0 +1,11 @@
+---
+- name: Create a user
+  hosts: all
+  become: yes
+  tasks:
+    - name: Add a new user
+      user:
+        name: johndoe
+        shell: /bin/bash
+        state: present
+        groups: wheel
