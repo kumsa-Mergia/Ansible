@@ -1,4 +1,3 @@
----
 - name: Create users on multiple operating systems
   hosts: all
   become: true
@@ -6,13 +5,18 @@
     new_users:
       - username: KumsaMergia
         shell: /bin/bash
-      - username: ChristinoRonalodo
+      - username: ChristianoRonaldo
         shell: /bin/bash
 
   tasks:
-    - name: Create users
+    - name: Ensure users are created
       user:
         name: "{{ item.username }}"
         shell: "{{ item.shell }}"
+        password: "{{ 'Test@1234' | password_hash('sha512') }}"
         state: present
+      loop: "{{ new_users }}"
+    
+    - name: Force users to change password on next login
+      command: chage -d 0 {{ item.username }}
       loop: "{{ new_users }}"
