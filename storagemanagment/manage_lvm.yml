@@ -1,0 +1,40 @@
+---
+- name: Create LVM and manipulate /etc/fstab # A brief description of the playbook's purpose
+  hosts: all #  Indicates that the playbook will run on all hosts specified in the inventory file.
+  become: true # Elevates privileges to run tasks as the root user (using sudo).
+  vars:
+    lvm_vg: "kumsa_VolumeG"     # Name of the volume group
+    lvm_lv: "kumsa_LogicalV"    # Name of the logical volume 
+    lvm_size: "10G"             # Size of the logical volume 
+    mount_point: "/mnt/mydata"  #  Directory where the volume will be mounted 
+    fstab_entry: "/dev/{{ lvm_vg }}/{{ lvm_lv }} {{ mount_point }} ext4 defaults 0 0" # The line to be added to /etc/fstab for persistent mounting of the volume.
+
+  tasks:
+    - name: Create physical volume
+      command: "pvcreate /dev/sdb" # Uses the pvcreate command to initialize the physical volume on /dev/sdb
+      when: ansible_facts['devices']['sdb'] is defined  # Only runs if the device sdb is detected (via ansible_facts).
+
+    - name: Create volume group
+      command: "vgcreate {{ lvm_vg }} /dev/sdb" # Uses the vgcreate command to create a volume group named my_vg using /dev/sdb
+
+    - name: Create logical volume
+      command: "lvcreate -L {{ lvm_size }} -n {{ lvm_lv }} {{ lvm_vg }}" # Uses the lvcreate command to create a logical volume named my_lv with a size of 10GB inside the volume group my_vg.
+
+    - name: Format logical volume
+      filesystem:
+        fstype: ext4
+        dev: "/dev/{{ lvm_vg }}/{{ lvm_lv }}" # Formats the logical volume /dev/my_vg/my_lv with the ext4 filesystem using the filesystem module.
+
+    - name: Create mount point
+      file:
+        path: "{{ mount_point }}" # Ensures that the directory /mnt/mydata exists as the mount point.
+        state: directory
+
+    - name: Add to fstab
+      lineinfile: # Uses the lineinfile module to add a line to /etc/fstab for persistent
+        path: /etc/fstab
+        line: "{{ fstab_entry }}"
+        state: present
+
+    - name: Mount the volume
+      command: "mount -a" # Uses the mount -a command to mount all filesystems listed in /etc/fstab, including the newly added entry.
