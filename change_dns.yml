@@ -1,0 +1,16 @@
+---
+- name: Change DNS configuration
+  hosts: all
+  become: true
+  vars:
+    dns_config:
+      - nameserver 8.8.8.8
+      - nameserver 8.8.4.4
+
+  tasks:
+    - name: Add DNS configuration
+      lineinfile:
+        path: /etc/resolv.conf
+        line: "{{ item }}"
+        state: present
+      loop: "{{ dns_config }}"
