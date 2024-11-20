@@ -1,0 +1,13 @@
+---
+- name: Install necessary packages
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - git
+        - vim
+        - wget
