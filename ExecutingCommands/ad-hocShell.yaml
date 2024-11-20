@@ -1,0 +1,6 @@
+---
+- name: Execute a shell command
+  hosts: all
+  tasks:
+    - name: Check disk usage
+      command: df -h
