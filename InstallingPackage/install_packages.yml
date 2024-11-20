@@ -1,0 +1,14 @@
+---
+- name: Install packages on remote machine
+  hosts: all
+  become: true
+  vars:
+    packages_to_install:
+      - vim
+      - curl
+
+  tasks:
+    - name: Install packages
+      package:
+        name: "{{ packages_to_install }}"
+        state: present
