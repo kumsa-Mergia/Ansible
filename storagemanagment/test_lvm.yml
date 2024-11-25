@@ -1,0 +1,64 @@
+---
+- name: Create LVM Physical Volumes, Volume Group, Logical Volume, and Filesystem
+  hosts: all
+  become: true
+  vars:
+    lvm_vg: "Kumsa_VolumeG"
+    lvm_lv: "Kumsa_LogicalV"
+    lvm_size: "8G"
+    fs_type: "ext4"
+    devices:
+      - {name: "/dev/sdb"}
+      - {name: "/dev/sdc"}
+    mount_point: "/mnt/KuData"
+
+  tasks:
+    - name: Create physical volumes
+      command: pvcreate {{ item.name }}
+      loop: "{{ devices }}"
+      notify:
+        - Verify Physical Volumes
+
+    - name: Create Volume Group
+      command: vgcreate {{ lvm_vg }} {{ devices | map(attribute='name') | join(' ') }}
+      notify:
+        - Verify Volume Group
+
+    - name: Create Logical Volume
+      command: lvcreate -L {{ lvm_size }} -n {{ lvm_lv }} {{ lvm_vg }}
+      notify:
+        - Verify Logical Volume
+
+    - name: Create filesystem on Logical Volume
+      command: mkfs -t {{ fs_type }} /dev/{{ lvm_vg }}/{{ lvm_lv }}
+      notify:
+        - Verify Filesystem
+
+    - name: Create mount point directory
+      file:
+        path: "{{ mount_point }}"
+        state: directory
+
+    - name: Mount Logical Volume
+      mount:
+        path: "{{ mount_point }}"
+        src: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"
+        fstype: "{{ fs_type }}"
+        state: mounted
+
+  handlers:
+    - name: Verify Physical Volumes
+      command: pvdisplay
+      become: true
+
+    - name: Verify Volume Group
+      command: vgs {{ lvm_vg }}
+      become: true
+
+    - name: Verify Logical Volume
+      command: lvdisplay /dev/{{ lvm_vg }}/{{ lvm_lv }}
+      become: true
+
+    - name: Verify Filesystem
+      command: lsblk /dev/{{ lvm_vg }}/{{ lvm_lv }}
+      become: true
