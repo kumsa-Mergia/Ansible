@@ -1,64 +1,83 @@
 ---
+# This playbook automates the creation of Physical Volumes (PVs), a Volume Group (VG), a Logical Volume (LV), 
+# formats the LV with a filesystem, and mounts it to a specified directory.
+
 - name: Create LVM Physical Volumes, Volume Group, Logical Volume, and Filesystem
-  hosts: all
-  become: true
+  hosts: all  # This playbook will run on all the target hosts
+  become: true  # Elevates privileges to root (necessary for LVM and filesystem management)
+
+  # Defining variables that will be used throughout the playbook
   vars:
-    lvm_vg: "Kumsa_VolumeG"
-    lvm_lv: "Kumsa_LogicalV"
-    lvm_size: "8G"
-    fs_type: "ext4"
+    lvm_vg: "Kumsa_VolumeG"  # Name of the Volume Group (VG)
+    lvm_lv: "Kumsa_LogicalV"  # Name of the Logical Volume (LV)
+    lvm_size: "8G"  # Size of the Logical Volume (LV)
+    fs_type: "ext4"  # Filesystem type to be used (ext4)
+    
+    # List of devices to be used for creating Physical Volumes (PVs)
     devices:
-      - {name: "/dev/sdb"}
-      - {name: "/dev/sdc"}
-    mount_point: "/mnt/KuData"
+      - {name: "/dev/sdb"}  # Device 1
+      - {name: "/dev/sdc"}  # Device 2
+    
+    mount_point: "/mnt/KuData"  # Directory where the Logical Volume will be mounted
 
   tasks:
+    # Task to create Physical Volumes (PVs) on each device
     - name: Create physical volumes
-      command: pvcreate {{ item.name }}
-      loop: "{{ devices }}"
+      command: pvcreate {{ item.name }}  # Run pvcreate on each device
+      loop: "{{ devices }}"  # Iterate over the 'devices' list
       notify:
-        - Verify Physical Volumes
+        - Verify Physical Volumes  # Notify the handler to verify PVs after creation
 
+    # Task to create the Volume Group (VG) from the defined devices
     - name: Create Volume Group
-      command: vgcreate {{ lvm_vg }} {{ devices | map(attribute='name') | join(' ') }}
+      command: vgcreate {{ lvm_vg }} {{ devices | map(attribute='name') | join(' ') }}  # Create VG from devices
       notify:
-        - Verify Volume Group
+        - Verify Volume Group  # Notify handler to verify VG creation
 
+    # Task to create the Logical Volume (LV) inside the Volume Group (VG)
     - name: Create Logical Volume
-      command: lvcreate -L {{ lvm_size }} -n {{ lvm_lv }} {{ lvm_vg }}
+      command: lvcreate -L {{ lvm_size }} -n {{ lvm_lv }} {{ lvm_vg }}  # Create LV with defined size and name
       notify:
-        - Verify Logical Volume
+        - Verify Logical Volume  # Notify handler to verify LV creation
 
+    # Task to create a filesystem on the Logical Volume (LV)
     - name: Create filesystem on Logical Volume
-      command: mkfs -t {{ fs_type }} /dev/{{ lvm_vg }}/{{ lvm_lv }}
+      command: mkfs -t {{ fs_type }} /dev/{{ lvm_vg }}/{{ lvm_lv }}  # Format the LV with the specified filesystem type (ext4)
       notify:
-        - Verify Filesystem
+        - Verify Filesystem  # Notify handler to verify filesystem creation
 
+    # Task to create the mount point directory if it doesn't exist
     - name: Create mount point directory
       file:
-        path: "{{ mount_point }}"
-        state: directory
+        path: "{{ mount_point }}"  # Path to the directory that will serve as the mount point
+        state: directory  # Ensure the directory is created if it does not exist
 
+    # Task to mount the Logical Volume to the specified mount point
     - name: Mount Logical Volume
       mount:
-        path: "{{ mount_point }}"
-        src: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"
-        fstype: "{{ fs_type }}"
-        state: mounted
+        path: "{{ mount_point }}"  # Mount point directory
+        src: "/dev/{{ lvm_vg }}/{{ lvm_lv }}"  # Source: Logical Volume (LV) path
+        fstype: "{{ fs_type }}"  # Filesystem type (ext4)
+        state: mounted  # Ensure that the volume is mounted
 
+  # Handlers that are triggered when notified by tasks
   handlers:
+    # Handler to verify the creation of Physical Volumes (PVs)
     - name: Verify Physical Volumes
-      command: pvdisplay
-      become: true
+      command: pvdisplay  # Run pvdisplay to show the Physical Volumes
+      become: true  # Ensure this is run as root
 
+    # Handler to verify the creation of the Volume Group (VG)
     - name: Verify Volume Group
-      command: vgs {{ lvm_vg }}
-      become: true
+      command: vgs {{ lvm_vg }}  # Run vgs to show information about the Volume Group
+      become: true  # Ensure this is run as root
 
+    # Handler to verify the creation of the Logical Volume (LV)
     - name: Verify Logical Volume
-      command: lvdisplay /dev/{{ lvm_vg }}/{{ lvm_lv }}
-      become: true
+      command: lvdisplay /dev/{{ lvm_vg }}/{{ lvm_lv }}  # Run lvdisplay to show information about the Logical Volume
+      become: true  # Ensure this is run as root
 
+    # Handler to verify the creation of the filesystem
     - name: Verify Filesystem
-      command: lsblk /dev/{{ lvm_vg }}/{{ lvm_lv }}
-      become: true
+      command: lsblk /dev/{{ lvm_vg }}/{{ lvm_lv }}  # Run lsblk to verify the Logical Volume and filesystem
+      become: true  # Ensure this is run as root
