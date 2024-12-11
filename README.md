@@ -1,8 +1,7 @@
-# Ansible
+# Ansible Repository
 
 ![Ansible Logo](ansible.png)
 
-# Ansible Repository
 
 Welcome to my Ansible Repository! This repository contains a collection of Ansible playbooks and roles organized into directories based on specific use cases and functionalities.
 
