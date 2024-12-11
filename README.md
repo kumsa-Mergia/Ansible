@@ -50,7 +50,7 @@ Here is the structure of the repository with a brief description of each directo
    ```
 2. Navigate to the directory of the desired functionality:
    ```bash
-   cd your-ansible-repo/<directory-name>
+   cd Ansible/<directory-name>
    ```
 3. Run the playbook:
    ```bash
