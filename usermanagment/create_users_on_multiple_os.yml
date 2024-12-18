@@ -1,22 +1,52 @@
-- name: Create users on multiple operating systems
+- name: Create user on different Linux and Win os
   hosts: all
   become: true
   vars:
-    new_users:
-      - username: KumsaMergia
-        shell: /bin/bash
-      - username: ChristianoRonaldo
-        shell: /bin/bash
+    users:
+      - username: testuser
+        fullname: test user
+        password: Test#54321
 
   tasks:
-    - name: Ensure users are created
-      user:
+    - name: Create user on Ubuntu/Debian
+      ansible.builtin.user:
         name: "{{ item.username }}"
-        shell: "{{ item.shell }}"
-        password: "{{ 'Test@1234' | password_hash('sha512') }}" # The password is hashed using the password_hash filter with the sha512 hashing algorithm.
+        shell: /bin/bash
+        groups: sudo
+        append: yes
         state: present
-      loop: "{{ new_users }}"
-    
+        password: "{{ '{ item.password }' | password_hash('sha512') }}"
+
+        create_home: yes
+      when: ansible_facts.os_family == "Debian"
+      loop: "{{users}}"
+
+    - name: Create user on Fedora
+      ansible.builtin.user:
+        name: "{{ item.username }}"
+        shell: /bin/bash
+        groups: wheel
+        append: yes
+        state: present
+        password: "{{ '{ item.password }' | password_hash('sha512') }}"
+        create_home: yes
+      when: ansible_facts.os_family in ["RedHat", "Fedora"]
+      loop: "{{users}}"
+
+    - name: Create a user on Windows Server
+      ansible.windows.win_user:
+        name: "{{item.username}}"
+        fullname: "{{item.fullname}}"
+        password: "{{ item.password }}"
+        state: present
+        groups:
+         - Users
+         - Administrators
+      when: ansible_facts['os_family'] == "Windows"
+      loop: "{{users}}"
+
+
     - name: Force users to change password on next login
       command: chage -d 0 {{ item.username }}  # The chage -d 0 command forces the user to change their password upon the first login.
-      loop: "{{ new_users }}"
+      when: ansible_facts.os_family in ["RedHat", "Debian", "SUSE", "Fedora"]
+      loop: "{{ users }}"
