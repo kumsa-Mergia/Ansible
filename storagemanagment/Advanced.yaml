@@ -1,0 +1,68 @@
+---
+  - name: Create LVM and mount points
+    hosts: all
+    become: yes
+    vars:
+      vg_list:
+        - lvm_vg: "Kumsa_VolumeG1"
+          devices:
+            - "/dev/sdb"  # You can Add Any Device if Available
+          lvm_lv:
+            - lvm: "lvm1"
+              lvm_size: "2G"
+              fs_type: "ext4"
+              mount_point: "/mnt/KuData1"
+            - lvm: "lvm2"
+              lvm_size: "2G"
+              fs_type: "ext4"
+              mount_point: "/mnt/KuData2"
+        - lvm_vg: "Kumsa_VolumeG2"
+          devices:
+            - "/dev/sdc"  # You can Add Any Device if Available
+          lvm_lv:
+            - lvm: "lvm3"
+              lvm_size: "2G"
+              fs_type: "ext4"
+              mount_point: "/mnt/KuData3"
+            - lvm: "lvm4"
+              lvm_size: "2G"
+              fs_type: "ext4"
+              mount_point: "/mnt/KuData4"
+  
+    tasks:
+      - name: Create volume group
+        community.general.lvg:
+          vg: "{{ item.lvm_vg }}"
+          pvs: "{{ item.devices }}"
+        loop: "{{ vg_list }}"
+  
+      - name: Create logical volumes
+        community.general.lvol:
+          vg: "{{ item.0.lvm_vg }}"
+          lv: "{{ item.1.lvm }}"
+          size: "{{ item.1.lvm_size }}"
+          state: present
+        loop: "{{ vg_list | subelements('lvm_lv') }}"
+  
+      - name: Format the logical volumes
+        filesystem:
+          fstype: "{{ item.1.fs_type }}"
+          dev: "/dev/{{ item.0.lvm_vg }}/{{ item.1.lvm }}"
+        loop: "{{ vg_list | subelements('lvm_lv') }}"
+  
+      - name: Create mount points
+        file:
+          path: "{{ item.1.mount_point }}"
+          state: directory
+          owner: root
+          group: root
+          mode: '0755'
+        loop: "{{ vg_list | subelements('lvm_lv') }}"
+  
+      - name: Mount the logical volumes
+        mount:
+          path: "{{ item.1.mount_point }}"
+          src: "/dev/{{ item.0.lvm_vg }}/{{ item.1.lvm }}"
+          fstype: "{{ item.1.fs_type }}"
+          state: mounted
+        loop: "{{ vg_list | subelements('lvm_lv') }}"
