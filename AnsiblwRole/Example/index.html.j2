@@ -1,0 +1,10 @@
+# roles/web_server/templates/index.html.j2
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Welcome</title>
+</head>
+<body>
+  <h1>Hello from {{ hostvars['ansible_hostname'] }}!</h1>
+</body>
+</html>
