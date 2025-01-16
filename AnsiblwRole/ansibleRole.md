@@ -20,21 +20,40 @@
 **Role Structure:**
 
 roles/
+
 ├── role_name/
+
 │   ├── tasks/
+
 │   │   ├── main.yml
+
 │   │   └── other_tasks.yml
+
 │   ├── handlers/
+
 │   │   └── main.yml
+
 │   ├── templates/
+
 │   │   ├── file1.j2
+
 │   │   └── file2.j2
+
 │   ├── files/
+
 │   │   ├── file1
+
 │   │   └── file2
+
 │   ├── defaults/
+
 │   │   └── main.yml
+
 │   ├── vars/
+
 │   │   └── main.yml
+
 │   ├── meta/
+
 │   │   └── main.yml
+
