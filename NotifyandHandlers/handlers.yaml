@@ -3,8 +3,8 @@
   hosts: webservers
   become: yes
   tasks:
-    - name: Install nginx
-      yum:
+    - name: Install Nginx
+      package:  # Use 'package' for cross-distro compatibility
         name: nginx
         state: present
       notify: Restart Nginx
@@ -14,3 +14,4 @@
       service:
         name: nginx
         state: restarted
+        enabled: yes  # Ensures Nginx starts at boot
