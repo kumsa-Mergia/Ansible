@@ -1,0 +1,21 @@
+---
+- name: Add tenableuser and give sudo access
+  hosts: all
+  become: true
+
+  vars:
+    tenable_password: "Coop#54321"
+
+  tasks:
+    - name: Create tenableuser with password
+      ansible.builtin.user:
+        name: tenableuser
+        shell: /bin/bash
+        create_home: yes
+        password: "{{ tenable_password | password_hash('sha512') }}"
+
+    - name: Add tenableuser to sudo group
+      ansible.builtin.user:
+        name: tenableuser
+        groups: sudo
+        append: yes
